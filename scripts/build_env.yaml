@@ -1,0 +1,21 @@
+name: TFHclust
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python
+  - bedtools
+  - deeptools
+  - samtools
+  - pip
+  - pip:
+    - numpy
+    - hdbscan
+    - networkx
+    - seaborn
+    - pandas
+    - statsmodels
+    - scipy
+    - scikit-learn
+    - pysam
+    - ipykernel
