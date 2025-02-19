@@ -8,3 +8,4 @@ data/H3K27me3/bam/H3K27me3_ctrl_MCF7_ENCFF433BQD.bam
 data/H3K27me3/bam/H3K27me3_obs_MCF7_ENCFF351EJX.bai
 data/H3K27me3/bam/H3K27me3_obs_MCF7_ENCFF351EJX.bam
 data/H3K27me3/bigwig/H3K27me3_pvalue_MCF7_ENCFF195CGX.bigWig
+data/H3K27ac/bed/H3K27AC_IDR_peak_ENCFF340KSH.bed
