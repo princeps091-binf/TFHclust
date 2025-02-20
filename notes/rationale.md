@@ -12,17 +12,19 @@
         - highlight culled subtree with significant aggregation content
         - highlight effective density by examining "local" enrichment: observed number reads within window spanning twice the width of the considered cluster (Poisson test) + chromosome-wide rate -> pick most conservative (MACS method)
 - Payload:
+    - Highlight aggregate event that are significant but missed by conventional peak detection
+        - peak-less clusters -> low-affinity events
+        - relation to convntional broad peaks
+        - More generally what is the broader and still significant affinity context beyond conventional peaks
+    - Relation to known regulatory intervals
+        - CRE
+        - Gene annotation
     - How do different scale determine one another
         - What kind of regions get zoned in upon by increasingly smaller scale aggregations -> within scope of particular enriched subtree
             - TFBS content configuration as we consider different scales of read aggregate
                 - how do successive scale of the same structure consolidate the enrichment in particular kinds of TFBS
         - "Fragmentation" pattern
-    - Highlight aggregate event that are significant but missed by conventional peak detection
-        - peak-less clusters -> low-affinity events
-        - More broadly what is the broader and still significant affinity context beyond conventional peaks
-    - Relation to known regulatory intervals
-        - CRE
-        - Gene annotation
+
 ## Viz/Fig
 1. Ctrl vs Obs. + infered cluster tracks
     - incorporate hierarchy of signficant subtrees
@@ -32,4 +34,5 @@
 4. Comparative analysis to illustrate change in landscape
     - same cell line but different factors
     - different cell lines but same factor
+        - How the larger scale embedding of conventional peaks that appear preserved actually changes.
 5. TFBS enrichment pattern
