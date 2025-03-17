@@ -9,3 +9,5 @@ data/H3K27me3/bam/H3K27me3_obs_MCF7_ENCFF351EJX.bai
 data/H3K27me3/bam/H3K27me3_obs_MCF7_ENCFF351EJX.bam
 data/H3K27me3/bigwig/H3K27me3_pvalue_MCF7_ENCFF195CGX.bigWig
 data/H3K27ac/bed/H3K27AC_IDR_peak_ENCFF340KSH.bed
+data/H3K27me3/bed/ENCFF677ITZ.bed.gz
+data/H3K27me3/bed/H3K27me3_peak_MCF7_rep2_ENCFF677ITZ.bed
