@@ -11,3 +11,12 @@ data/H3K27me3/bigwig/H3K27me3_pvalue_MCF7_ENCFF195CGX.bigWig
 data/H3K27ac/bed/H3K27AC_IDR_peak_ENCFF340KSH.bed
 data/H3K27me3/bed/ENCFF677ITZ.bed.gz
 data/H3K27me3/bed/H3K27me3_peak_MCF7_rep2_ENCFF677ITZ.bed
+data/CTCF/bam/CTCF_ctrl_MCF7_ENCFF806IOU.bai
+data/CTCF/bam/CTCF_ctrl_MCF7_ENCFF806IOU.bam
+.gitignore
+data/CTCF/bam/CTCF_obs_MCF7_ENCFF340FIT.bai
+data/CTCF/bam/CTCF_obs_MCF7_ENCFF340FIT.bam
+data/CTCF/bed/CTCF_peak_MCF7_rep2_ENCFF613LWE.bed
+.gitignore
+data/CTCF/bed/ENCFF613LWE.bed.gz
+data/CTCF/bigwig/CTCF_pvalue_MCF7_ENCFF767VZW.bigWig
