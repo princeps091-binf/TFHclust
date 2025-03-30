@@ -23,6 +23,8 @@
         - What kind of regions get zoned in upon by increasingly smaller scale aggregations -> within scope of particular enriched subtree
             - TFBS content configuration as we consider different scales of read aggregate
                 - how do successive scale of the same structure consolidate the enrichment in particular kinds of TFBS
+                - Leverage the unibind data and its categorisation of permisive vs robust peaks when examing TFChIP
+                    - expect shift in peak composition as we consider deeper regions in the hierarchical decomposition of TFChIP aggregation
         - "Fragmentation" pattern
 
 ## Viz/Fig
