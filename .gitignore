@@ -20,3 +20,12 @@ data/CTCF/bed/CTCF_peak_MCF7_rep2_ENCFF613LWE.bed
 .gitignore
 data/CTCF/bed/ENCFF613LWE.bed.gz
 data/CTCF/bigwig/CTCF_pvalue_MCF7_ENCFF767VZW.bigWig
+data/CHD1/bam/CHD1_ctrl_MCF7_ENCFF612QJN.bai
+.gitignore
+.gitignore
+data/CHD1/bam/CHD1_ctrl_MCF7_ENCFF612QJN.bam
+data/CHD1/bam/CHD1_obs_MCF7_ENCFF308MMO.bai
+.gitignore
+data/CHD1/bam/CHD1_obs_MCF7_ENCFF308MMO.bam
+data/CHD1/bed/CHD1_peak_MCF7_rep1_ENCFF993MCI.bed
+data/CHD1/bigwig/CHD1_pvalue_MCF7_ENCFF029GUY.bigWig
