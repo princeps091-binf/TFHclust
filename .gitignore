@@ -29,3 +29,9 @@ data/CHD1/bam/CHD1_obs_MCF7_ENCFF308MMO.bai
 data/CHD1/bam/CHD1_obs_MCF7_ENCFF308MMO.bam
 data/CHD1/bed/CHD1_peak_MCF7_rep1_ENCFF993MCI.bed
 data/CHD1/bigwig/CHD1_pvalue_MCF7_ENCFF029GUY.bigWig
+data/CTCF/bam/CTCF_obs_MCF7_ENCFF623IZG.bai
+data/CTCF/bam/CTCF_obs_MCF7_ENCFF623IZG.bam
+data/CTCF/bed/CTCF_peak_MCF7_rep1_ENCFF167NKR.bed
+data/CTCF/bed/ENCFF167NKR.bed.gz
+data/CTCF/UniBind_search_ce4dfog9/ENCSR000DWH.MCF7_Invasive_ductal_breast_carcinoma.CTCF.MA0139.1.damo.bed
+data/CTCF/UniBind_search_ce4dfog9/metadata.tsv
