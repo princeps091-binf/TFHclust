@@ -10,6 +10,7 @@ dependencies:
   - pip
   - pip:
     - numpy
+    - bioframe
     - hdbscan
     - networkx
     - seaborn
