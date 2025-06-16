@@ -35,3 +35,4 @@ data/CTCF/bed/CTCF_peak_MCF7_rep1_ENCFF167NKR.bed
 data/CTCF/bed/ENCFF167NKR.bed.gz
 data/CTCF/UniBind_search_ce4dfog9/ENCSR000DWH.MCF7_Invasive_ductal_breast_carcinoma.CTCF.MA0139.1.damo.bed
 data/CTCF/UniBind_search_ce4dfog9/metadata.tsv
+data/CTCF/UniBind_search_ce4dfog9/UniBind -    CTCF - TFBS.csv
