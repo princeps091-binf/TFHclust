@@ -36,3 +36,12 @@ data/CTCF/bed/ENCFF167NKR.bed.gz
 data/CTCF/UniBind_search_ce4dfog9/ENCSR000DWH.MCF7_Invasive_ductal_breast_carcinoma.CTCF.MA0139.1.damo.bed
 data/CTCF/UniBind_search_ce4dfog9/metadata.tsv
 data/CTCF/UniBind_search_ce4dfog9/UniBind -    CTCF - TFBS.csv
+notes/presentation/jacob_prz.pdf
+data/H3K27me3/bam/H3K27me3_obs_MCF7_rep1_ENCFF519ABK.bai
+.gitignore
+data/H3K27me3/bam/H3K27me3_obs_MCF7_rep1_ENCFF519ABK.bam
+data/H3K27me3/bam/H3K27me3_obs_MCF7_rep2_ENCFF351EJX.bai
+.gitignore
+data/H3K27me3/bam/H3K27me3_obs_MCF7_rep2_ENCFF351EJX.bam
+data/H3K27me3/bed/ENCFF035BIQ.bed.gz
+data/H3K27me3/bed/H3K27me3_peak_MCF7_rep1_ENCFF035BIQ.bed
