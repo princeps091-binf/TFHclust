@@ -45,3 +45,5 @@ data/H3K27me3/bam/H3K27me3_obs_MCF7_rep2_ENCFF351EJX.bai
 data/H3K27me3/bam/H3K27me3_obs_MCF7_rep2_ENCFF351EJX.bam
 data/H3K27me3/bed/ENCFF035BIQ.bed.gz
 data/H3K27me3/bed/H3K27me3_peak_MCF7_rep1_ENCFF035BIQ.bed
+data/H3K27ac/bam/H3K27ac_obs_MCF7_ENCFF422VIN.bam
+data/H3K27ac/bam/H3K27ac_obs_MCF7_ENCFF422VIN.bai
