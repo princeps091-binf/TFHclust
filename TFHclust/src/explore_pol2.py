@@ -16,15 +16,14 @@ from matplotlib.collections import PolyCollection  # Collections of patches
 
 #%%
 ctrl_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/ctrl/ENCFF062SCH.bam"
-rep1_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/ENCFF343QJV.bam"
-rep2_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/ENCFF386OKF.bam"
+rep1_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/rep3_ENCFF343QJV.bam"
+rep2_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/rep1_ENCFF386OKF.bam"
 
 #%%
-chromo = 'chr22'
+chromo = 'chr19'
 bg_tbl = detect_cluster.get_chrom_read_tbl_from_bam(ctrl_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
 rep1_read_tbl = detect_cluster.get_chrom_read_tbl_from_bam(rep1_obs_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
 rep2_read_tbl = detect_cluster.get_chrom_read_tbl_from_bam(rep2_obs_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
-# %%
 # %%
 rep1_clustering = detect_cluster.read_clustering(rep1_read_tbl)
 rep1_clustering.HDBScan_clustering(3,10)
@@ -68,6 +67,64 @@ for _,t in merged_hic_clustering.inter_rep_match_tbl.sort_values('norm_lvl_rep1'
     triangles.append(coordinates)  # Append to collection
 
 z = (merged_hic_clustering.inter_rep_match_tbl.sort_values('norm_lvl_rep1').norm_lvl_rep2 + merged_hic_clustering.inter_rep_match_tbl.sort_values('norm_lvl_rep1').norm_lvl_rep1)/2
+collec = PolyCollection(triangles, array=z, cmap=viridis)
+
+fig, ax = plt.subplots(1, 1)
+ax.add_collection(collec)  # Plot polygon collection
+ax.autoscale_view()
+plt.show()
+
+# %%
+chrom_peak_df = (pd.read_csv('/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/bed/rep1_ENCFF320MOY.bed.gz',sep='\t',usecols=[0,1,2,4,9],header=None)
+ .rename(columns={0:'chrom',
+                  1:'start',
+                  2:'end',
+                  4:'IDR',
+                  9:'w'})
+ .assign(start = lambda df: df.start.astype(int),
+         end = lambda df: df.end.astype(int))).query('chrom == @chromo')
+#%%
+(bf.count_overlaps(chrom_peak_df,rep2_read_tbl.assign(end = lambda df: df.start + 1))
+.rename(columns={'count':'obs'})
+.merge(
+bf.count_overlaps(chrom_peak_df,bg_tbl.assign(end = lambda df: df.start + 1))
+.rename(columns={'count':'bg'})
+)
+.assign(FC = lambda df: df.obs/(df.bg + 1))
+.FC.plot.kde()
+)
+
+# %%
+(bf.count_overlaps(rep2_clustering.summary_tbl,chrom_peak_df)
+ .assign(peak_in = lambda df: np.where(df.loc[:,'count'].lt(1),'out','in'))
+ .groupby(['peak_in'])
+ .pvalue.plot.kde(legend=True)
+)
+#%%
+merged_hic_clustering.inter_rep_match_tbl.assign(lw=lambda df: np.log10(df.w)).lw.plot.kde()
+#%%
+bf.merge(merged_hic_clustering.inter_rep_match_tbl.loc[:,['chrom','start','end','pvalue_rep1','pvalue_rep2']]).sort_values('n_intervals')
+
+#%%
+#%%
+target_domains_df = (merged_hic_clustering.inter_rep_match_tbl
+                     .sort_values('norm_lvl_rep1')
+                     .query('start > 18588000 and end <18591176'))
+triangles = []
+for _,t in target_domains_df.iterrows():
+    xmid = t.start + (t.w/2)  # Middle x-coord
+    xleft = t.start
+    xright = t.end
+
+    y1 = 0  # y-coords
+    y2 = (t.w/2)
+
+    coordinates = [[xleft, y1], [xright, y1], [xmid, y2]]
+
+    print(coordinates) 
+    triangles.append(coordinates)  # Append to collection
+
+z = (target_domains_df.norm_lvl_rep2 + target_domains_df.norm_lvl_rep1)/2
 collec = PolyCollection(triangles, array=z, cmap=viridis)
 
 fig, ax = plt.subplots(1, 1)

@@ -60,3 +60,15 @@ TFHclust/pixi.toml
 .vscode/settings.json
 TFHclust/src/__pycache__/detect_cluster.cpython-312.pyc
 TFHclust/src/__pycache__/integrate_replicate.cpython-312.pyc
+TFHclust/data/POLR2A/rep1_ENCFF386OKF.bai
+.gitignore
+TFHclust/data/POLR2A/rep1_ENCFF386OKF.bam
+TFHclust/data/POLR2A/rep2_ENCFF390WNV.bai
+TFHclust/data/POLR2A/rep2_ENCFF390WNV.bam
+.gitignore
+TFHclust/data/POLR2A/rep3_ENCFF343QJV.bai
+.gitignore
+TFHclust/data/POLR2A/rep3_ENCFF343QJV.bam
+TFHclust/data/POLR2A/bed/rep1_ENCFF320MOY.bed.gz
+TFHclust/data/POLR2A/bed/rep2_ENCFF694CVM.bed.gz
+TFHclust/data/POLR2A/bed/rep3_ENCFF810DQL.bed.gz
