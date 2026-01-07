@@ -72,3 +72,12 @@ TFHclust/data/POLR2A/rep3_ENCFF343QJV.bam
 TFHclust/data/POLR2A/bed/rep1_ENCFF320MOY.bed.gz
 TFHclust/data/POLR2A/bed/rep2_ENCFF694CVM.bed.gz
 TFHclust/data/POLR2A/bed/rep3_ENCFF810DQL.bed.gz
+TFHclust/data/RAD21/rep1_ENCFF029DFG.bai
+.gitignore
+TFHclust/data/RAD21/rep1_ENCFF029DFG.bam
+TFHclust/data/RAD21/rep2_ENCFF913GHN.bai
+.gitignore
+TFHclust/data/RAD21/rep2_ENCFF913GHN.bam
+.gitignore
+TFHclust/data/RAD21/ctrl/ENCFF285GKD.bai
+TFHclust/data/RAD21/ctrl/ENCFF285GKD.bam
