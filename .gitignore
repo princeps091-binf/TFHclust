@@ -47,3 +47,14 @@ data/H3K27me3/bed/ENCFF035BIQ.bed.gz
 data/H3K27me3/bed/H3K27me3_peak_MCF7_rep1_ENCFF035BIQ.bed
 data/H3K27ac/bam/H3K27ac_obs_MCF7_ENCFF422VIN.bam
 data/H3K27ac/bam/H3K27ac_obs_MCF7_ENCFF422VIN.bai
+TFHclust/data/POLR2A/ENCFF343QJV.bai
+TFHclust/data/POLR2A/ENCFF343QJV.bam
+TFHclust/data/POLR2A/ENCFF386OKF.bai
+TFHclust/data/POLR2A/ENCFF386OKF.bam
+TFHclust/data/POLR2A/ENCFF390WNV.bai
+TFHclust/data/POLR2A/ENCFF390WNV.bam
+TFHclust/data/POLR2A/ctrl/ENCFF062SCH.bai
+TFHclust/data/POLR2A/ctrl/ENCFF062SCH.bam
+TFHclust/pixi.lock
+TFHclust/pixi.toml
+.vscode/settings.json
