@@ -81,3 +81,8 @@ TFHclust/data/RAD21/rep2_ENCFF913GHN.bam
 .gitignore
 TFHclust/data/RAD21/ctrl/ENCFF285GKD.bai
 TFHclust/data/RAD21/ctrl/ENCFF285GKD.bam
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+/pixi.toml
+/.gitattributes

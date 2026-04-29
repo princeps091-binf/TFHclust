@@ -1,3 +1,4 @@
+# %%
 import pysam
 import pandas as pd
 import hdbscan
@@ -5,7 +6,7 @@ import networkx as nx
 import statsmodels.api as sm
 from scipy.stats import t
 import subprocess
-
+# %%
 def get_chrom_read_tbl_from_bam(bam_file,tmp_chrom,tmp_folder):
     tmp_file = f"{tmp_folder}/tmp.bam"
     tmp_index_file = f"{tmp_folder}/tmp.bai"
