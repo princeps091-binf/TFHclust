@@ -86,3 +86,4 @@ TFHclust/data/RAD21/ctrl/ENCFF285GKD.bam
 !.pixi/config.toml
 /pixi.toml
 /.gitattributes
+/pixi.lock
