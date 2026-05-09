@@ -1,7 +1,7 @@
 # %%
 import pysam
 import pandas as pd
-import hdbscan
+import fast_hdbscan
 import networkx as nx
 import statsmodels.api as sm
 from scipy.stats import t
@@ -22,7 +22,7 @@ def get_chrom_read_tbl_from_bam(bam_file,tmp_chrom,tmp_folder):
     return pd.concat(obs_dfs)    
 
 def perform_HDBScan_clustering(read_tbl,min_cluster,processes):
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster,
+    clusterer = fast_hdbscan.HDBSCAN(min_cluster_size=min_cluster,
                         metric='euclidean',
                         core_dist_n_jobs=processes)
     clusterer.fit(read_tbl.loc[:,['start']])

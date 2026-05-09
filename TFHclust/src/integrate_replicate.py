@@ -1,4 +1,4 @@
-import hdbscan
+import fast_hdbscan
 import networkx as nx
 import numpy as np
 import bioframe as bf
