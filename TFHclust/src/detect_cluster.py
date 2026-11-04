@@ -8,33 +8,62 @@ import networkx as nx
 import statsmodels.api as sm
 from scipy.stats import t
 import subprocess
+import numba
+import io
+
 # %%
-def get_chrom_read_tbl_from_bam(bam_file,tmp_chrom,tmp_folder):
-    tmp_file = f"{tmp_folder}/tmp.bam"
-    tmp_index_file = f"{tmp_folder}/tmp.bai"
-    subprocess.run(['touch', tmp_file])
-    subprocess.run(["samtools", "view", "-b", "-o",tmp_file, bam_file, tmp_chrom])
-    subprocess.run(["samtools", "index", tmp_file, tmp_index_file])
-    tmp_bamfile = pysam.AlignmentFile(tmp_file, "rb")
-    obs_iter = tmp_bamfile.fetch(tmp_chrom)
-    obs_dfs = []
-    for ix in obs_iter:
-        obs_dfs.append(pd.DataFrame({'ID':[ix.to_dict()['name']],'chrom':[ix.to_dict()['ref_name']],'start':[ix.to_dict()['ref_pos']],'flag':[ix.to_dict()['flag']]}))
-    subprocess.run(["rm", tmp_file, tmp_index_file])
-    return pd.concat(obs_dfs)    
+def get_chrom_read_tbl_from_bam(bam_file, tmp_chrom):
+    # 1. On lance samtools view en extrayant uniquement les colonnes nécessaires :
+    # QNAME (ID = %q), FLAG (%f), RNAME (chrom = %r), POS (start = %pos)
+    # L'argument -@ 2 active le multi-threading pour accélérer la décompression
+    cmd = ["samtools", "view", "-@", "2",  bam_file, tmp_chrom]
+    
+    # 2. Exécution du processus et capture du flux de sortie (stdout)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+    
+    # 3. Lecture directe du flux texte par Pandas (sans aucun fichier temporaire)
+    # On spécifie les colonnes SAM standard : 0=ID, 1=FLAG, 2=CHROM, 3=START
+    df = pd.read_csv(
+        process.stdout, 
+        sep='\t', 
+        header=None, 
+        usecols=[0, 1, 2, 3],
+        names=['ID', 'flag', 'chrom', 'start'],
+        dtype={'ID': str, 'flag': int, 'chrom': str, 'start': int}
+    )
+    
+    # S'assurer que le processus s'est terminé correctement
+    process.wait()
+    
+    # Réorganiser l'ordre des colonnes pour correspondre exactement à votre format d'origine
+    return df[['ID', 'chrom', 'start', 'flag']]
 
 def perform_HDBScan_clustering(read_tbl,min_cluster,processes):
-    clusterer = fast_hdbscan.HDBSCAN(min_cluster_size=min_cluster,
-                        metric='euclidean',
-                        core_dist_n_jobs=processes)
-    clusterer.fit(read_tbl.loc[:,['start']])
-    return clusterer
+    total_cores = numba.config.NUMBA_NUM_THREADS
+    # 2. Ajuster selon le choix de l'utilisateur (ex: gestion du -1 classique)
+    if processes == -1 or processes > total_cores:
+        target_threads = total_cores
+    elif processes <= 0:
+        raise ValueError("processes must be greater than 0 or equal to -1")
+    else:
+        target_threads = processes
+    # 3. Sauvegarder le nombre initial de threads pour pouvoir le restaurer après
+    previous_threads = numba.get_num_threads()
+    try:
+        # 4. Assigner temporairement le nombre de cœurs choisi par l'utilisateur
+        numba.set_num_threads(target_threads)
+        clusterer = fast_hdbscan.HDBSCAN(min_cluster_size=min_cluster,
+                        metric='euclidean')
+        clusterer.fit(read_tbl.loc[:,['start']])
+        return clusterer
+    finally:
+        # 6. Toujours restaurer la configuration initiale (bonne pratique)
+        numba.set_num_threads(previous_threads)
 
 def collect_hdb_cluster_read(g):
     
     leaves = set([v for v, d in g.out_degree() if d == 0])
     HDB_clusters = [v for v, d in g.out_degree() if d > 0]
-
     cl_read_idx = [list(nx.descendants(g,i).intersection(leaves)) for i in HDB_clusters]
     cl_read_tbl = pd.DataFrame({"HDB_cluster":HDB_clusters,"read_id_set":cl_read_idx})
     return(cl_read_tbl)
@@ -100,15 +129,47 @@ def build_hic_zscore(data_tbl,vars,vars_df,vars_degree,target_var):
     """
     x_spline = data_tbl[vars].to_numpy(dtype=float)
     y = data_tbl[target_var].to_numpy(dtype=float)
+    # bs = sm.gam.BSplines(x_spline, df=vars_df, degree=vars_degree)
+    #
+    # chr_gam = sm.GLMGam(y,smoother=bs)
+    # chr_gam_res = chr_gam.fit()
+    # gam_infl = chr_gam_res.get_influence()
+    # bs_tranform_exog = bs.transform(data_tbl[vars].to_numpy())
+    # tmp_rng = chr_gam_res.get_distribution(exog=bs_tranform_exog)
+    # mod_pvalue = tmp_rng.sf(data_tbl[target_var].to_numpy())
+    # new_data_tbl = data_tbl.assign(zscore = gam_infl.resid_studentized,pvalue = mod_pvalue)
+    # return new_data_tbl
+    # Ensure degrees of freedom and degree parameters match the dimension of predictors if given as ints
+    if isinstance(vars_df, int):
+        vars_df = [vars_df] * x_spline.shape[1]
+    if isinstance(vars_degree, int):
+        vars_degree = [vars_degree] * x_spline.shape[1]
+
     bs = sm.gam.BSplines(x_spline, df=vars_df, degree=vars_degree)
 
-    chr_gam = sm.GLMGam(y,smoother=bs)
+    # 2. Configure Negative Binomial family (automatically uses log-link for counts)
+    nb_family = sm.families.NegativeBinomial(link=sm.families.links.Log(), alpha=1.0)
+
+    # 3. Fit GLMGam with Negative Binomial distribution
+    # Note: GLMGam takes the endog (y) and optional linear exog, plus the smoother
+    chr_gam = sm.GLMGam(endog=y, smoother=bs, family=nb_family)
     chr_gam_res = chr_gam.fit()
+
+    # 4. Extract influence metrics and standardized residuals
     gam_infl = chr_gam_res.get_influence()
-    bs_tranform_exog = bs.transform(data_tbl[vars].to_numpy())
-    tmp_rng = chr_gam_res.get_distribution(exog=bs_tranform_exog)
-    mod_pvalue = tmp_rng.sf(data_tbl[target_var].to_numpy())
-    new_data_tbl = data_tbl.assign(zscore = gam_infl.resid_studentized,pvalue = mod_pvalue)
+    
+    # 5. Calculate empirical survival function (p-values) from the fitted Negative Binomial distribution
+    # Transform exog to evaluate the fitted distribution per data point
+    bs_transform_exog = bs.transform(x_spline)
+    tmp_rng = chr_gam_res.get_distribution(exog=bs_transform_exog)
+    mod_pvalue = tmp_rng.sf(y)
+
+    # 6. Assign results back to the dataframe
+    new_data_tbl = data_tbl.assign(
+        zscore=gam_infl.resid_studentized,
+        pvalue=mod_pvalue
+    )
+    
     return new_data_tbl
 
 class read_clustering:
@@ -121,13 +182,28 @@ class read_clustering:
         self.res_tbl = None
         self.summary_tbl = None
     
-    def HDBScan_clustering(self,min_size,njobs):
-        clusterer = hdbscan.HDBSCAN(min_cluster_size=min_size,
-                        metric='euclidean',
-                        core_dist_n_jobs=njobs)
-        clusterer.fit(self.read_tbl.loc[:,['start']])
-        self.full_graph = clusterer.condensed_tree_.to_networkx()
-    
+    def HDBScan_clustering(self,min_cluster,processes):
+        total_cores = numba.config.NUMBA_NUM_THREADS
+        # 2. Ajuster selon le choix de l'utilisateur (ex: gestion du -1 classique)
+        if processes == -1 or processes > total_cores:
+            target_threads = total_cores
+        elif processes <= 0:
+            raise ValueError("processes must be greater than 0 or equal to -1")
+        else:
+            target_threads = processes
+        # 3. Sauvegarder le nombre initial de threads pour pouvoir le restaurer après
+        previous_threads = numba.get_num_threads()
+        try:
+            # 4. Assigner temporairement le nombre de cœurs choisi par l'utilisateur
+            numba.set_num_threads(target_threads)
+            clusterer = fast_hdbscan.HDBSCAN(min_cluster_size=min_cluster,
+                            metric='euclidean')
+            clusterer.fit(self.read_tbl.loc[:,['start']])
+            self.full_graph = clusterer.condensed_tree_.to_networkx()
+        finally:
+            # 6. Toujours restaurer la configuration initiale (bonne pratique)
+            numba.set_num_threads(previous_threads)
+
     def collect_hdb_cluster_read(self):
     
         leaves = set([v for v, d in self.full_graph.out_degree() if d == 0])

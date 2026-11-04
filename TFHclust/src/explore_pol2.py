@@ -20,7 +20,7 @@ rep1_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/rep3_ENCFF3
 rep2_obs_bam = "/home/vipink/Documents/TFHclust/TFHclust/data/POLR2A/rep1_ENCFF386OKF.bam"
 
 # %%
-chromo = 'chr19'
+chromo = 'chr22'
 bg_tbl = src.detect_cluster.get_chrom_read_tbl_from_bam(ctrl_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
 rep1_read_tbl = src.detect_cluster.get_chrom_read_tbl_from_bam(rep1_obs_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
 rep2_read_tbl = src.detect_cluster.get_chrom_read_tbl_from_bam(rep2_obs_bam,chromo,"/home/vipink/Documents/TFHclust/TFHclust/data/tmp").assign(start = lambda df_: df_.start.astype(int))
