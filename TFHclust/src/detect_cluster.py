@@ -1,12 +1,10 @@
 # %%
-import pysam
 import pandas as pd
 import fast_hdbscan
 import numpy as np
 import bioframe as bf
 import networkx as nx
 import statsmodels.api as sm
-from scipy.stats import t
 import subprocess
 import numba
 import io
@@ -37,54 +35,6 @@ def get_chrom_read_tbl_from_bam(bam_file, tmp_chrom):
     
     # Réorganiser l'ordre des colonnes pour correspondre exactement à votre format d'origine
     return df[['ID', 'chrom', 'start', 'flag']]
-
-def perform_HDBScan_clustering(read_tbl,min_cluster,processes):
-    total_cores = numba.config.NUMBA_NUM_THREADS
-    # 2. Ajuster selon le choix de l'utilisateur (ex: gestion du -1 classique)
-    if processes == -1 or processes > total_cores:
-        target_threads = total_cores
-    elif processes <= 0:
-        raise ValueError("processes must be greater than 0 or equal to -1")
-    else:
-        target_threads = processes
-    # 3. Sauvegarder le nombre initial de threads pour pouvoir le restaurer après
-    previous_threads = numba.get_num_threads()
-    try:
-        # 4. Assigner temporairement le nombre de cœurs choisi par l'utilisateur
-        numba.set_num_threads(target_threads)
-        clusterer = fast_hdbscan.HDBSCAN(min_cluster_size=min_cluster,
-                        metric='euclidean')
-        clusterer.fit(read_tbl.loc[:,['start']])
-        return clusterer
-    finally:
-        # 6. Toujours restaurer la configuration initiale (bonne pratique)
-        numba.set_num_threads(previous_threads)
-
-def collect_hdb_cluster_read(g):
-    
-    leaves = set([v for v, d in g.out_degree() if d == 0])
-    HDB_clusters = [v for v, d in g.out_degree() if d > 0]
-    cl_read_idx = [list(nx.descendants(g,i).intersection(leaves)) for i in HDB_clusters]
-    cl_read_tbl = pd.DataFrame({"HDB_cluster":HDB_clusters,"read_id_set":cl_read_idx})
-    return(cl_read_tbl)
-
-def build_cluster_data_df(tmp_cl_tbl,read_tbl):
-    long_cl_read_tbl = tmp_cl_tbl.explode('read_id_set')
-    long_cl_read_tbl = (long_cl_read_tbl
-                        .assign(start = lambda df_:read_tbl.reset_index().start.to_numpy()[df_.read_id_set.to_numpy(dtype=int)])
-                        )
-
-    tmp_chr_hdb_summary_tbl = (long_cl_read_tbl
-                                    .groupby('HDB_cluster')
-                                    .agg(start = ('start','min'),
-                                        end=('start','max'),
-                                        rc = ('start','count')
-                                        )
-                                    .assign(w= lambda df_:df_.end - df_.start)
-                                    .reset_index()
-                                    .merge(tmp_cl_tbl)
-                                )
-    return tmp_chr_hdb_summary_tbl   
 
 
 def build_hic_zscore(data_tbl,vars,vars_df,vars_degree,target_var):
@@ -129,16 +79,6 @@ def build_hic_zscore(data_tbl,vars,vars_df,vars_degree,target_var):
     """
     x_spline = data_tbl[vars].to_numpy(dtype=float)
     y = data_tbl[target_var].to_numpy(dtype=float)
-    # bs = sm.gam.BSplines(x_spline, df=vars_df, degree=vars_degree)
-    #
-    # chr_gam = sm.GLMGam(y,smoother=bs)
-    # chr_gam_res = chr_gam.fit()
-    # gam_infl = chr_gam_res.get_influence()
-    # bs_tranform_exog = bs.transform(data_tbl[vars].to_numpy())
-    # tmp_rng = chr_gam_res.get_distribution(exog=bs_tranform_exog)
-    # mod_pvalue = tmp_rng.sf(data_tbl[target_var].to_numpy())
-    # new_data_tbl = data_tbl.assign(zscore = gam_infl.resid_studentized,pvalue = mod_pvalue)
-    # return new_data_tbl
     # Ensure degrees of freedom and degree parameters match the dimension of predictors if given as ints
     if isinstance(vars_df, int):
         vars_df = [vars_df] * x_spline.shape[1]
@@ -181,6 +121,7 @@ class read_clustering:
         self.regression_tbl = None
         self.res_tbl = None
         self.summary_tbl = None
+        self.cluster_read_coords_cache: dict[int, np.ndarray] = {}
     
     def HDBScan_clustering(self,min_cluster,processes):
         total_cores = numba.config.NUMBA_NUM_THREADS
@@ -230,7 +171,11 @@ class read_clustering:
                                             )
                                         .assign(w= lambda df_:df_.end - df_.start)
                                     ).reset_index().merge(tmp_cl_read_tbl)
-
+        # Build the optimized cluster-to-read-start coordinate cache for fast parallel task dispatch
+        self.cluster_read_coords_cache = {
+            int(cluster_id): group['start'].to_numpy(dtype=float)
+            for cluster_id, group in long_cl_read_tbl.groupby('HDB_cluster')
+        }
     def  build_regression_tbl(self,ctrl_read_df):
 
         bg_coord_df = ctrl_read_df.loc[:,['chrom','start']].assign(start = lambda df_: df_.start.astype(int)).assign(end = lambda df_: df_.start + 1)

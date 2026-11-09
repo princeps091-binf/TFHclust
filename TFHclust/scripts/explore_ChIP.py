@@ -16,7 +16,7 @@ import matplotlib.patches as pat  # Patches like pat.Polygon()
 from matplotlib.collections import PolyCollection  # Collections of patches
 
 # %%
-chromo = 'chr19'
+chromo = 'chr22'
 
 # %%
 
@@ -54,7 +54,7 @@ multi_rep_obj.extract_consensus_components(jaccard_thresh=0.5,cvm_pval_thresh=0.
 
 # %%
 
-x_min, x_max = 48000000,50000000
+x_min, x_max = 30500000, 30600000
 tmp_plt_df = multi_rep_obj.consensus_loci_tbl.assign(w = lambda df: df.end - df.start).sort_values('w',ascending=False)
 plt_df = tmp_plt_df[(tmp_plt_df.end >= x_min) & (tmp_plt_df.start <= x_max)]
 

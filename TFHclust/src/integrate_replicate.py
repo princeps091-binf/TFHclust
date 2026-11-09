@@ -280,59 +280,6 @@ class DirectedMultiRepGraphClustering:
         self.consensus_loci_tbl = pd.DataFrame(consensus_records).query('replicate_support > 1')
         return self.consensus_loci_tbl
     
-    def compute_cvm_edge_weights(self) -> None:
-        """
-        Computes the two-sample Cramér-von Mises test for all existing edges using 
-        the asymptotic limiting distribution, restricted to the shared overlap window.
-        """
-        for u, v, data in self.graph.edges(data=True):
-            rep_u = self.graph.nodes[u]['rep']
-            rep_v = self.graph.nodes[v]['rep']
-            
-            cluster_u_id = self.graph.nodes[u]['HDB_cluster']
-            cluster_v_id = self.graph.nodes[v]['HDB_cluster']
-            
-            obj_u = self.replicates[rep_u]
-            obj_v = self.replicates[rep_v]
-            
-            reads_u = obj_u.read_tbl.iloc[obj_u.cl_read_tbl.query("HDB_cluster == @cluster_u_id").read_id_set.to_numpy()[0],:].start.to_numpy()            
-            reads_v = obj_v.read_tbl.iloc[obj_v.cl_read_tbl.query("HDB_cluster == @cluster_v_id").read_id_set.to_numpy()[0],:].start.to_numpy()
-            
-            if len(reads_u) < 2 or len(reads_v) < 2:
-                self.graph[u][v]['cvm_statistic'] = np.nan
-                self.graph[u][v]['cvm_pvalue'] = 1.0
-                continue
-                
-            start_u, end_u = self.graph.nodes[u]['start'], self.graph.nodes[u]['end']
-            start_v, end_v = self.graph.nodes[v]['start'], self.graph.nodes[v]['end']
-            # 1. Define the union window (from global min start to global max end)
-            union_start = min(start_u, start_v)
-            union_end = max(end_u, end_v)
-            union_span = union_end - union_start
-            
-            if union_span <= 0:
-                self.graph[u][v]['cvm_statistic'] = np.nan
-                self.graph[u][v]['cvm_pvalue'] = 1.0
-                continue
-                
-            # 2. Retain reads falling within the union coordinate frame
-            reads_u_filtered = reads_u[(reads_u >= union_start) & (reads_u <= union_end)]
-            reads_v_filtered = reads_v[(reads_v >= union_start) & (reads_v <= union_end)]
-            
-            if len(reads_u_filtered) < 2 or len(reads_v_filtered) < 2:
-                self.graph[u][v]['cvm_statistic'] = np.nan
-                self.graph[u][v]['cvm_pvalue'] = 1.0
-                continue
-                
-            # 3. Normalize read positions to [0, 1] relative to the union span
-            norm_u = np.clip((reads_u_filtered - union_start) / union_span, 0.0, 1.0)
-            norm_v = np.clip((reads_v_filtered - union_start) / union_span, 0.0, 1.0)
-            
-            # 4. Compute CvM test using the asymptotic limiting distribution
-            res = stats.cramervonmises_2samp(norm_u, norm_v, method='asymptotic')            
-            # Assign metrics
-            self.graph[u][v]['cvm_statistic'] = res.statistic
-            self.graph[u][v]['cvm_pvalue'] = res.pvalue   
     @staticmethod
     def _worker_compute_cvm(u, v, node_u_data, node_v_data, reads_u, reads_v):
         """
@@ -379,7 +326,6 @@ class DirectedMultiRepGraphClustering:
         """
         if max_workers is None:
             max_workers = max(1, os.cpu_count() - 1)  # Leave one core free for system stability
-
         edge_tasks = []
         
         # Pre-gather tasks and extract read arrays sequentially in main thread 
@@ -395,8 +341,8 @@ class DirectedMultiRepGraphClustering:
             obj_v = self.replicates[rep_v]
             
             # Extract target reads securely
-            reads_u = obj_u.read_tbl.iloc[obj_u.cl_read_tbl.query("HDB_cluster == @cluster_u_id").read_id_set.to_numpy()[0],:].start.to_numpy()            
-            reads_v = obj_v.read_tbl.iloc[obj_v.cl_read_tbl.query("HDB_cluster == @cluster_v_id").read_id_set.to_numpy()[0],:].start.to_numpy()
+            reads_u = obj_u.cluster_read_coords_cache.get(cluster_u_id, np.array([], dtype=float))            
+            reads_v = obj_v.cluster_read_coords_cache.get(cluster_v_id, np.array([], dtype=float))
             
             node_u_data = self.graph.nodes[u]
             node_v_data = self.graph.nodes[v]
